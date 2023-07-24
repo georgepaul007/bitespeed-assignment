@@ -1,32 +1,19 @@
-# Base image
-FROM maven:3.8-openjdk-11 AS builder
-
-# Set the working directory
+# Use a Maven base image to build the Spring Boot application
+FROM maven:3.8.4-openjdk-17-slim AS build
+# Set the working directory to /app
 WORKDIR /app
-
-# Copy the POM file
+# Copy the POM file for dependency resolution
 COPY pom.xml .
-
-# Build the project dependencies
-RUN mvn dependency:go-offline -B
-
 # Copy the source code
 COPY src ./src
-
-# Build the application
+# Build the application using Maven
 RUN mvn package -DskipTests
 
-# Build the final image
-FROM openjdk:11
-
-# Set the working directory
+# Use a Java base image for the runtime environment
+FROM openjdk:17-alpine AS runtime
+# Set the working directory to /app
 WORKDIR /app
-
-# Copy the JAR file from the builder stage
-COPY --from=builder /app/target/my-spring-boot-app.jar .
-
-# Expose the port on which the application listens
-EXPOSE 8080
-
-# Run the application
-CMD ["java", "-jar", "my-spring-boot-app.jar"]
+# Copy the JAR file from the build stage
+COPY --from=build /app/target/bitespeed-assignment-0.0.1-SNAPSHOT.jar .
+# Run the Spring Boot application when the container starts
+CMD ["java", "-jar", "bitespeed-assignment-0.0.1-SNAPSHOT.jar"]

@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.fluxkart</groupId>
-	<artifactId>assignment</artifactId>
+	<artifactId>bitespeed-assignment</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>assignment</name>
 	<description>Assignment For BiteSpeed</description>
