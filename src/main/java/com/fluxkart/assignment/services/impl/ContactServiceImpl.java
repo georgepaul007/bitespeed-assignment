@@ -12,6 +12,9 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.OptionalInt;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 public class ContactServiceImpl implements ContactService {
@@ -35,5 +38,40 @@ public class ContactServiceImpl implements ContactService {
                             .build())
                     .build();
         }
+        if(!contactRepo.existsByPhoneNumberAndEmail(identifyDto.getPhone(), identifyDto.getEmail())) {
+            contactList.add(contactRepo.save(Contact.builder()
+                    .phoneNumber(identifyDto.getPhone())
+                    .email(identifyDto.getEmail())
+                    .linkPrecedence(LinkPrecedence.SECONDARY)
+                    .build()));
+        }
+        OptionalInt secondPrimaryIndex = IntStream.range(0, contactList.size())
+                .filter(i -> LinkPrecedence.PRIMARY.name().equals(contactList.get(i).getLinkPrecedence().name()))
+                .skip(1)
+                .findFirst();
+        if(secondPrimaryIndex.isPresent()) {
+            contactList.get(secondPrimaryIndex.getAsInt()).setLinkPrecedence(LinkPrecedence.SECONDARY);
+            contactRepo.save(contactList.get(secondPrimaryIndex.getAsInt()));
+        }
+        List<String> uniqueEmails = contactList.stream()
+                .map(Contact::getEmail)
+                .distinct()
+                .collect(Collectors.toList());
+        List<String> uniquePhoneNumbers = contactList.stream()
+                .map(Contact::getPhoneNumber)
+                .distinct()
+                .collect(Collectors.toList());
+        List<Integer> secondaryContactIds = contactList.stream()
+                .skip(1) // Skip the first element
+                .map(Contact::getId)
+                .collect(Collectors.toList());
+        return IdentifyResponse.builder()
+                .contact(IdentifyResponse.Contact.builder()
+                        .secondaryContactIds(secondaryContactIds)
+                        .phoneNumbers(uniquePhoneNumbers)
+                        .emails(uniqueEmails)
+                        .primaryContactId(contactList.get(0).getId())
+                        .build())
+                .build();
     }
 }

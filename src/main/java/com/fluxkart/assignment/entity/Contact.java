@@ -24,7 +24,6 @@ public class Contact {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @Column(name = "id")
-    @NotNull
     private Integer id;
 
     @Column(name = "phone_number")
@@ -40,13 +39,11 @@ public class Contact {
     private LinkPrecedence linkPrecedence;
 
     @Column(name = "created_date")
-    @NotNull
     @CreatedDate
     @Temporal(TIMESTAMP)
     private Date createdDate;
 
     @Column(name = "updated_date")
-    @NotNull
     @LastModifiedDate
     @Temporal(TIMESTAMP)
     private Date updatedDate;
