@@ -73,9 +73,12 @@ public class ContactServiceImpl implements ContactService {
         Set<String> uniqueEmails = new HashSet<>();
         Set<String> uniquePhoneNumbers = new HashSet<>();
         Set<Integer> secondaryContactIds = new HashSet<>();
-
-        uniqueEmails.add(primaryContact.getEmail());
-        uniquePhoneNumbers.add(primaryContact.getPhoneNumber());
+        if(primaryContact.getEmail() != null) {
+            uniqueEmails.add(primaryContact.getEmail());
+        }
+        if(primaryContact.getPhoneNumber() != null) {
+            uniquePhoneNumbers.add(primaryContact.getPhoneNumber());
+        }
 
         secondaryContacts.forEach(contact -> {
             if(contact.getEmail() != null) {
