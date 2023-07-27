@@ -47,7 +47,12 @@ public class ContactServiceImpl implements ContactService {
         }
 
         Optional<Contact> existingContact = contactList.stream()
-                .filter(c -> c.getPhoneNumber().equals(identifyDto.getPhone()) && c.getEmail().equals(identifyDto.getEmail()))
+                .filter(c -> {
+                    String phoneNumber = c.getPhoneNumber();
+                    String email = c.getEmail();
+                    return Optional.ofNullable(phoneNumber).equals(Optional.ofNullable(identifyDto.getPhone())) &&
+                            Optional.ofNullable(email).equals(Optional.ofNullable(identifyDto.getEmail()));
+                })
                 .findFirst();
 
 
@@ -73,8 +78,12 @@ public class ContactServiceImpl implements ContactService {
         uniquePhoneNumbers.add(primaryContact.getPhoneNumber());
 
         secondaryContacts.forEach(contact -> {
-            uniqueEmails.add(contact.getEmail());
-            uniquePhoneNumbers.add(contact.getPhoneNumber());
+            if(contact.getEmail() != null) {
+                uniqueEmails.add(contact.getEmail());
+            }
+            if(contact.getPhoneNumber() != null) {
+                uniquePhoneNumbers.add(contact.getPhoneNumber());
+            }
             secondaryContactIds.add(contact.getId());
         });
 
