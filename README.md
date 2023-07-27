@@ -7,4 +7,5 @@ Then you can use ```docker compose up``` to run all the dependencies and the spr
 
 now under the ```http://localhost:8080/identify``` you can hit the end point with postman. 
 
+the server is currently deployed in the link -> ```https://bitespeed-assignment.onrender.com/identify```
 Note: I have used SpringBoot to write the server as I have more experience and would be able to write a better server in this language at the moment. 
