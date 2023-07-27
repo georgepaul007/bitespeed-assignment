@@ -42,6 +42,7 @@ public class ContactServiceImpl implements ContactService {
         if(secondPrimaryIndex.isPresent()) {
             contactList.get(secondPrimaryIndex.getAsInt()).setLinkPrecedence(LinkPrecedence.SECONDARY);
             contactList.get(secondPrimaryIndex.getAsInt()).setLinkedId(contactList.get(0).getId());
+            contactList.get(secondPrimaryIndex.getAsInt()).setUpdatedDate(new Date());
             contactRepo.save(contactList.get(secondPrimaryIndex.getAsInt()));
             return buildIdentifyResponse(contactList.get(0), contactList.subList(1, contactList.size()));
         }
@@ -50,8 +51,9 @@ public class ContactServiceImpl implements ContactService {
                 .filter(c -> {
                     String phoneNumber = c.getPhoneNumber();
                     String email = c.getEmail();
-                    return Optional.ofNullable(phoneNumber).equals(Optional.ofNullable(identifyDto.getPhone())) &&
-                            Optional.ofNullable(email).equals(Optional.ofNullable(identifyDto.getEmail()));
+                    return (identifyDto.getPhone() == null || identifyDto.getEmail() == null)
+                            || (Objects.equals(identifyDto.getPhone(), phoneNumber)
+                            && Objects.equals(identifyDto.getEmail(), email));
                 })
                 .findFirst();
 
@@ -61,6 +63,7 @@ public class ContactServiceImpl implements ContactService {
                     .phoneNumber(identifyDto.getPhone())
                     .email(identifyDto.getEmail())
                     .updatedDate(new Date())
+                    .createdDate(new Date())
                     .linkedId(contactList.get(0).getId())
                     .linkPrecedence(LinkPrecedence.SECONDARY)
                     .build());
