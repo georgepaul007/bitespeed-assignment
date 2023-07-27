@@ -10,7 +10,7 @@ COPY src ./src
 RUN mvn package -DskipTests
 
 # Use a Java base image for the runtime environment
-FROM openjdk:17-alpine AS runtime
+FROM openjdk:17 AS runtime
 # Set the working directory to /app
 WORKDIR /app
 # Copy the JAR file from the build stage
