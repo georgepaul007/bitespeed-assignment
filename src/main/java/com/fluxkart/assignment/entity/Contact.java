@@ -39,13 +39,9 @@ public class Contact {
     private LinkPrecedence linkPrecedence;
 
     @Column(name = "created_date")
-    @CreatedDate
-    @Temporal(TIMESTAMP)
     private Date createdDate;
 
     @Column(name = "updated_date")
-    @LastModifiedDate
-    @Temporal(TIMESTAMP)
     private Date updatedDate;
 
     @Column(name = "deleted_date")

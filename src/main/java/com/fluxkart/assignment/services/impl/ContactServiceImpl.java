@@ -25,6 +25,8 @@ public class ContactServiceImpl implements ContactService {
             Contact newContact = contactRepo.save(Contact.builder()
                     .phoneNumber(identifyDto.getPhone())
                     .email(identifyDto.getEmail())
+                    .createdDate(new Date())
+                    .updatedDate(new Date())
                     .linkPrecedence(LinkPrecedence.PRIMARY)
                     .build());
 
@@ -39,6 +41,7 @@ public class ContactServiceImpl implements ContactService {
             Contact newSecondaryContact = contactRepo.save(Contact.builder()
                     .phoneNumber(identifyDto.getPhone())
                     .email(identifyDto.getEmail())
+                    .updatedDate(new Date())
                     .linkPrecedence(LinkPrecedence.SECONDARY)
                     .build());
 
