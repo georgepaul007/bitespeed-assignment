@@ -33,6 +33,18 @@ public class ContactServiceImpl implements ContactService {
             return buildIdentifyResponse(newContact, Collections.emptyList());
         }
 
+        OptionalInt secondPrimaryIndex = IntStream.range(0, contactList.size())
+                .filter(i -> LinkPrecedence.PRIMARY.equals(contactList.get(i).getLinkPrecedence()))
+                .skip(1)
+                .findFirst();
+
+
+        if(secondPrimaryIndex.isPresent()) {
+            contactList.get(secondPrimaryIndex.getAsInt()).setLinkPrecedence(LinkPrecedence.SECONDARY);
+            contactRepo.save(contactList.get(secondPrimaryIndex.getAsInt()));
+            return buildIdentifyResponse(contactList.get(0), contactList.subList(1, contactList.size()));
+        }
+
         Optional<Contact> existingContact = contactList.stream()
                 .filter(c -> c.getPhoneNumber().equals(identifyDto.getPhone()) && c.getEmail().equals(identifyDto.getEmail()))
                 .findFirst();
@@ -44,19 +56,8 @@ public class ContactServiceImpl implements ContactService {
                     .updatedDate(new Date())
                     .linkPrecedence(LinkPrecedence.SECONDARY)
                     .build());
-
             contactList.add(newSecondaryContact);
         }
-
-        OptionalInt secondPrimaryIndex = IntStream.range(0, contactList.size())
-                .filter(i -> LinkPrecedence.PRIMARY.equals(contactList.get(i).getLinkPrecedence()))
-                .skip(1)
-                .findFirst();
-
-        secondPrimaryIndex.ifPresent(index -> {
-            contactList.get(index).setLinkPrecedence(LinkPrecedence.SECONDARY);
-            contactRepo.save(contactList.get(index));
-        });
 
         return buildIdentifyResponse(contactList.get(0), contactList.subList(1, contactList.size()));
     }
