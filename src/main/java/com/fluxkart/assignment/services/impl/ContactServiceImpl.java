@@ -9,10 +9,7 @@ import com.fluxkart.assignment.webmodel.IdentifyResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.OptionalInt;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -23,55 +20,66 @@ public class ContactServiceImpl implements ContactService {
     ContactRepo contactRepo;
     public IdentifyResponse identify(IdentifyDto identifyDto) {
         List<Contact> contactList = contactRepo.findByPhoneNumberOrEmail(identifyDto.getPhone(), identifyDto.getEmail());
-        if(contactList.isEmpty()) {
+
+        if (contactList.isEmpty()) {
             Contact newContact = contactRepo.save(Contact.builder()
                     .phoneNumber(identifyDto.getPhone())
                     .email(identifyDto.getEmail())
                     .linkPrecedence(LinkPrecedence.PRIMARY)
                     .build());
-            return IdentifyResponse.builder()
-                    .contact(IdentifyResponse.Contact.builder()
-                            .primaryContactId(newContact.getId())
-                            .emails(Collections.singletonList(newContact.getEmail()))
-                            .phoneNumbers(Collections.singletonList(newContact.getPhoneNumber()))
-                            .secondaryContactIds(new ArrayList<>())
-                            .build())
-                    .build();
+
+            return buildIdentifyResponse(newContact, Collections.emptyList());
         }
-        if(!contactRepo.existsByPhoneNumberAndEmail(identifyDto.getPhone(), identifyDto.getEmail())) {
-            contactList.add(contactRepo.save(Contact.builder()
+
+        Optional<Contact> existingContact = contactList.stream()
+                .filter(c -> c.getPhoneNumber().equals(identifyDto.getPhone()) && c.getEmail().equals(identifyDto.getEmail()))
+                .findFirst();
+
+        if (existingContact.isEmpty()) {
+            Contact newSecondaryContact = contactRepo.save(Contact.builder()
                     .phoneNumber(identifyDto.getPhone())
                     .email(identifyDto.getEmail())
                     .linkPrecedence(LinkPrecedence.SECONDARY)
-                    .build()));
+                    .build());
+
+            contactList.add(newSecondaryContact);
         }
+
         OptionalInt secondPrimaryIndex = IntStream.range(0, contactList.size())
-                .filter(i -> LinkPrecedence.PRIMARY.name().equals(contactList.get(i).getLinkPrecedence().name()))
+                .filter(i -> LinkPrecedence.PRIMARY.equals(contactList.get(i).getLinkPrecedence()))
                 .skip(1)
                 .findFirst();
-        if(secondPrimaryIndex.isPresent()) {
-            contactList.get(secondPrimaryIndex.getAsInt()).setLinkPrecedence(LinkPrecedence.SECONDARY);
-            contactRepo.save(contactList.get(secondPrimaryIndex.getAsInt()));
-        }
-        List<String> uniqueEmails = contactList.stream()
-                .map(Contact::getEmail)
-                .distinct()
-                .collect(Collectors.toList());
-        List<String> uniquePhoneNumbers = contactList.stream()
-                .map(Contact::getPhoneNumber)
-                .distinct()
-                .collect(Collectors.toList());
-        List<Integer> secondaryContactIds = contactList.stream()
-                .skip(1) // Skip the first element
-                .map(Contact::getId)
-                .collect(Collectors.toList());
+
+        secondPrimaryIndex.ifPresent(index -> {
+            contactList.get(index).setLinkPrecedence(LinkPrecedence.SECONDARY);
+            contactRepo.save(contactList.get(index));
+        });
+
+        return buildIdentifyResponse(contactList.get(0), contactList.subList(1, contactList.size()));
+    }
+    private IdentifyResponse buildIdentifyResponse(Contact primaryContact, List<Contact> secondaryContacts) {
+        Set<String> uniqueEmails = new HashSet<>();
+        Set<String> uniquePhoneNumbers = new HashSet<>();
+        Set<Integer> secondaryContactIds = new HashSet<>();
+
+        uniqueEmails.add(primaryContact.getEmail());
+        uniquePhoneNumbers.add(primaryContact.getPhoneNumber());
+
+        secondaryContacts.forEach(contact -> {
+            uniqueEmails.add(contact.getEmail());
+            uniquePhoneNumbers.add(contact.getPhoneNumber());
+            secondaryContactIds.add(contact.getId());
+        });
+
         return IdentifyResponse.builder()
-                .contact(IdentifyResponse.Contact.builder()
-                        .secondaryContactIds(secondaryContactIds)
-                        .phoneNumbers(uniquePhoneNumbers)
-                        .emails(uniqueEmails)
-                        .primaryContactId(contactList.get(0).getId())
-                        .build())
+                .contact(
+                        IdentifyResponse.Contact.builder()
+                                .primaryContactId(primaryContact.getId())
+                                .emails(new ArrayList<>(uniqueEmails))
+                                .phoneNumbers(new ArrayList<>(uniquePhoneNumbers))
+                                .secondaryContactIds(new ArrayList<>(secondaryContactIds))
+                                .build()
+                )
                 .build();
     }
 }
