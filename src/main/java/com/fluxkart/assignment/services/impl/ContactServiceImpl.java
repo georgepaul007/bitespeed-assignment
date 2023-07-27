@@ -66,7 +66,13 @@ public class ContactServiceImpl implements ContactService {
                     .build());
             contactList.add(newSecondaryContact);
         }
-
+        if(contactList.get(0).getLinkPrecedence().name().equals(LinkPrecedence.SECONDARY.name())) {
+            Optional<Contact> newPrimarySuspectContact = contactRepo.findById(contactList.get(0).getLinkedId());
+            while(newPrimarySuspectContact.get().getLinkPrecedence().name().equals(LinkPrecedence.SECONDARY.name())) {
+                newPrimarySuspectContact = contactRepo.findById(newPrimarySuspectContact.get().getLinkedId());
+            }
+            return buildIdentifyResponse(newPrimarySuspectContact.get(), contactList);
+        }
         return buildIdentifyResponse(contactList.get(0), contactList.subList(1, contactList.size()));
     }
     private IdentifyResponse buildIdentifyResponse(Contact primaryContact, List<Contact> secondaryContacts) {

@@ -19,6 +19,7 @@ import static javax.persistence.TemporalType.TIMESTAMP;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+@Table(name = "contact")
 public class Contact {
 
     @Id
